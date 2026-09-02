@@ -24,7 +24,7 @@ export default function Welcome() {
           </div>
         </div>
         
-        <h1 className="text-4xl md:text-5xl font-bold mb-3">Reduk2</h1>
+        <h1 className="text-4xl md:text-5xl font-bold mb-3">Integra</h1>
         <p className="text-xl md:text-2xl text-muted-foreground mb-8">Herramientas digitales para docentes del Guaviare</p>
         
         <p className="mb-10 text-lg">

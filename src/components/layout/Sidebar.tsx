@@ -82,7 +82,7 @@ export default function Sidebar() {
         {!isCollapsed && (
           <div className="flex items-center gap-2">
             <GraduationCap className="h-8 w-8 text-primary" />
-            <span className="text-xl font-bold">Reduk2</span>
+            <span className="text-xl font-bold">Integra</span>
           </div>
         )}
         <Button

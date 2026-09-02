@@ -23,7 +23,7 @@ export default function Login() {
       setLoading(false);
       toast({
         title: "Inicio de sesión exitoso",
-        description: "Bienvenido a Reduk2",
+        description: "Bienvenido a Integra",
       });
       navigate("/dashboard");
     }, 1000);
@@ -39,7 +39,7 @@ export default function Login() {
             </div>
           </div>
           <h1 className="text-3xl font-bold">Iniciar Sesión</h1>
-          <p className="text-muted-foreground mt-2">Ingresa a tu cuenta de Reduk2</p>
+          <p className="text-muted-foreground mt-2">Ingresa a tu cuenta de Integra</p>
         </div>
 
         <div className="bg-card shadow-sm border rounded-xl p-6 animate-fade-in">

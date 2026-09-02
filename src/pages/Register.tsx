@@ -25,7 +25,7 @@ export default function Register() {
       setLoading(false);
       toast({
         title: "Registro exitoso",
-        description: "Tu cuenta ha sido creada. ¡Bienvenido a Reduk2!",
+        description: "Tu cuenta ha sido creada. ¡Bienvenido a Integra!",
       });
       navigate("/dashboard");
     }, 1000);
@@ -41,7 +41,7 @@ export default function Register() {
             </div>
           </div>
           <h1 className="text-3xl font-bold">Crear Cuenta</h1>
-          <p className="text-muted-foreground mt-2">Regístrate en Reduk2</p>
+          <p className="text-muted-foreground mt-2">Regístrate en Integra</p>
         </div>
 
         <div className="bg-card shadow-sm border rounded-xl p-6 animate-fade-in">
