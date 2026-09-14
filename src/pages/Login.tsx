@@ -4,19 +4,18 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { GraduationCap, Eye, EyeOff } from "lucide-react";
+import { validarUsuario, iniciarSesion, registrarEvento } from "@/lib/almacen";
 
-/*
-  Inicio de sesión de demostración. La validación real y el guardado local
-  se implementan en la Entrega 2.
-*/
+/* Las cuentas se guardan en este equipo; no hace falta internet para entrar. */
 export default function Login() {
   const [correo, setCorreo] = useState("");
   const [clave, setClave] = useState("");
   const [verClave, setVerClave] = useState(false);
   const [error, setError] = useState("");
+  const [enviando, setEnviando] = useState(false);
   const navigate = useNavigate();
 
-  const entrar = (e: React.FormEvent) => {
+  const entrar = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!correo.includes("@")) {
       setError("El correo debe tener una @. Por ejemplo: maria@correo.com");
@@ -27,6 +26,15 @@ export default function Login() {
       return;
     }
     setError("");
+    setEnviando(true);
+    const u = await validarUsuario(correo, clave);
+    setEnviando(false);
+    if (!u) {
+      setError("El correo o la contraseña no coinciden con una cuenta de este equipo. Revise o cree su cuenta.");
+      return;
+    }
+    iniciarSesion(u.correo);
+    await registrarEvento(u.correo, "entrar");
     navigate("/inicio");
   };
 
@@ -62,7 +70,7 @@ export default function Login() {
             </p>
           )}
 
-          <Button type="submit" className="w-full" size="lg">Entrar</Button>
+          <Button type="submit" className="w-full" size="lg" disabled={enviando}>{enviando ? "Entrando…" : "Entrar"}</Button>
         </form>
 
         <p className="mt-6">

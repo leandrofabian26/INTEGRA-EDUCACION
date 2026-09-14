@@ -2,17 +2,22 @@ import { Link } from "react-router-dom";
 import Layout from "@/components/layout/Layout";
 import PageHeader from "@/components/layout/PageHeader";
 import EstadoModulo from "@/components/EstadoModulo";
-import { modulos, avanceEjemplo, estadoDe } from "@/content/modulos";
+import { modulos } from "@/content/modulos";
+import { useSesion } from "@/hooks/useSesion";
+import { useAvance } from "@/hooks/useAvance";
 import { Clock, WifiOff, Wifi, ArrowRight } from "lucide-react";
 
 export default function Modulos() {
+  const { usuario } = useSesion();
+  const { estadoDe } = useAvance(usuario?.correo);
+
   return (
     <Layout>
       <PageHeader title="Mis módulos" description="Seis módulos cortos, en orden. Cada uno se hace paso a paso y puede repetirse las veces que quiera." />
 
       <ol className="space-y-4">
         {modulos.map((m) => {
-          const estado = estadoDe(m, avanceEjemplo);
+          const estado = estadoDe(m);
           return (
             <li key={m.id} className="panel">
               <div className="flex flex-col gap-3">

@@ -3,7 +3,8 @@ import PageHeader from "@/components/layout/PageHeader";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 
 const preguntas = [
-  { p: "¿Qué pasa si no hay internet?", r: "INTEGRA sigue funcionando. Los módulos, el foro y su avance quedan guardados en este computador. Cuando haya señal, lo que escribió en el foro se envía a los colegas." },
+  { p: "¿Qué pasa si no hay internet?", r: "INTEGRA sigue funcionando. Los módulos, el foro y su avance quedan guardados en este computador. Arriba a la derecha siempre se ve si hay conexión o no. Cuando vuelve la señal, lo que escribió en el foro se envía a los colegas y aparece un aviso." },
+  { p: "¿Puedo usar INTEGRA en otro computador?", r: "Su cuenta y su avance quedan guardados en el computador donde los creó. Si cambia de equipo, cree la cuenta de nuevo allí; en la próxima versión el avance viajará con usted cuando haya señal." },
   { p: "Me equivoqué en un paso. ¿Dañé algo?", r: "No. En INTEGRA no se puede dañar nada. Puede repetir cualquier paso las veces que quiera con el botón «Repetir este paso»." },
   { p: "La letra se ve muy pequeña.", r: "Arriba a la derecha están los botones A− y A+. Toque A+ hasta que lea con comodidad. El tamaño queda guardado." },
   { p: "El computador se bloqueó o no responde.", r: "Espere un minuto. Si sigue igual, mantenga presionado el botón de encendido unos 10 segundos hasta que se apague, espere y vuelva a encenderlo. Su avance en INTEGRA no se pierde." },

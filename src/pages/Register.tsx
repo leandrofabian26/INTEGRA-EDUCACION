@@ -4,20 +4,29 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { GraduationCap } from "lucide-react";
+import { crearUsuario, iniciarSesion, registrarEvento } from "@/lib/almacen";
 
 export default function Register() {
   const [nombre, setNombre] = useState("");
   const [correo, setCorreo] = useState("");
   const [clave, setClave] = useState("");
   const [error, setError] = useState("");
+  const [enviando, setEnviando] = useState(false);
   const navigate = useNavigate();
 
-  const crear = (e: React.FormEvent) => {
+  const crear = async (e: React.FormEvent) => {
     e.preventDefault();
     if (nombre.trim().length < 3) return setError("Escriba su nombre completo.");
     if (!correo.includes("@")) return setError("El correo debe tener una @. Por ejemplo: maria@correo.com");
     if (clave.length < 4) return setError("La contraseña debe tener al menos 4 caracteres.");
     setError("");
+    setEnviando(true);
+    const r = await crearUsuario(nombre, correo, clave);
+    setEnviando(false);
+    if (r.ok === false) { setError(r.error); return; }
+    const c = correo.trim().toLowerCase();
+    iniciarSesion(c);
+    await registrarEvento(c, "crear_cuenta");
     navigate("/inicio");
   };
 
@@ -50,7 +59,7 @@ export default function Register() {
             <p role="alert" className="rounded-lg border-2 border-destructive bg-red-50 text-destructive font-bold px-4 py-3">{error}</p>
           )}
 
-          <Button type="submit" className="w-full" size="lg">Crear mi cuenta</Button>
+          <Button type="submit" className="w-full" size="lg" disabled={enviando}>{enviando ? "Creando…" : "Crear mi cuenta"}</Button>
         </form>
 
         <p className="mt-6">

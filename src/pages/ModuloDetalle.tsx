@@ -1,16 +1,27 @@
+import { useEffect } from "react";
 import { Link, useParams } from "react-router-dom";
 import Layout from "@/components/layout/Layout";
-import { modulos, avanceEjemplo, estadoDe } from "@/content/modulos";
+import { modulos } from "@/content/modulos";
 import BarraAvance from "@/components/BarraAvance";
-import { ArrowLeft } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { useSesion } from "@/hooks/useSesion";
+import { useAvance } from "@/hooks/useAvance";
+import { registrarEvento } from "@/lib/almacen";
+import { ArrowLeft, Check, RotateCcw } from "lucide-react";
 
 /*
-  Vista de un módulo. En la Entrega 3 aquí irán los pasos (cápsulas):
-  qué va a lograr → ver → practicar → "lo logré / necesito ayuda".
+  Vista de un módulo. El avance ya se guarda en el equipo.
+  En la Entrega 3 cada paso tendrá su contenido (ver → practicar → lo logré).
 */
 export default function ModuloDetalle() {
   const { id } = useParams();
   const modulo = modulos.find((m) => m.id === id);
+  const { usuario } = useSesion();
+  const { listo, estadoDe, completarPaso, reiniciarModulo } = useAvance(usuario?.correo);
+
+  useEffect(() => {
+    if (usuario && modulo) registrarEvento(usuario.correo, "abrir_modulo", modulo.id);
+  }, [usuario, modulo]);
 
   if (!modulo) {
     return (
@@ -21,7 +32,8 @@ export default function ModuloDetalle() {
     );
   }
 
-  const estado = estadoDe(modulo, avanceEjemplo);
+  const estado = estadoDe(modulo);
+  const pasoActual = Math.min(estado.hechos + 1, modulo.pasos);
 
   return (
     <Layout>
@@ -31,14 +43,28 @@ export default function ModuloDetalle() {
       <p className="text-[1.15rem] mb-6"><strong>Al terminar podrá:</strong> {modulo.paraQue}</p>
 
       <div className="panel mb-8">
-        <BarraAvance hechos={estado.hechos} total={modulo.pasos} />
-        <p className="mt-4">Duración aproximada: {modulo.duracion}. Puede parar cuando quiera; su avance queda guardado.</p>
+        {listo && <BarraAvance hechos={estado.hechos} total={modulo.pasos} />}
+        <p className="mt-4">Duración aproximada: {modulo.duracion}. Puede parar cuando quiera; su avance queda guardado en este equipo.</p>
       </div>
 
-      <div className="panel bg-integra-arenaClaro">
-        <p className="font-bold mb-2">Los pasos de este módulo se están preparando.</p>
-        <p>En la siguiente versión de INTEGRA cada módulo tendrá {modulo.pasos} pasos cortos con imágenes y práctica guiada.</p>
-      </div>
+      {estado.tipo === "completado" ? (
+        <div className="panel border-integra-selva bg-integra-selvaClaro">
+          <h2 className="mb-3">Módulo completado.</h2>
+          <p className="mb-5">Puede repasarlo desde el principio cuando quiera.</p>
+          <Button variant="outline" size="lg" onClick={() => reiniciarModulo(modulo)}>
+            <RotateCcw aria-hidden="true" /> Repasar desde el paso 1
+          </Button>
+        </div>
+      ) : (
+        <div className="panel">
+          <p className="text-base font-bold mb-1">Paso {pasoActual} de {modulo.pasos}</p>
+          <h2 className="mb-3">El contenido de este paso se está preparando.</h2>
+          <p className="mb-6">En la siguiente versión aquí verá las imágenes y la práctica guiada. Por ahora puede marcar el paso cuando lo trabaje en la jornada presencial.</p>
+          <Button size="lg" onClick={() => completarPaso(modulo)}>
+            <Check aria-hidden="true" /> Lo logré, siguiente paso
+          </Button>
+        </div>
+      )}
     </Layout>
   );
 }

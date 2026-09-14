@@ -13,6 +13,7 @@ import Ayuda from "./pages/Ayuda";
 import Profile from "./pages/Profile";
 import NotFound from "./pages/NotFound";
 import { aplicarEscalaGuardada } from "@/lib/fontSize";
+import RutaProtegida from "@/components/layout/RutaProtegida";
 
 aplicarEscalaGuardada();
 
@@ -24,13 +25,13 @@ const App = () => (
         <Route path="/" element={<Welcome />} />
         <Route path="/entrar" element={<Login />} />
         <Route path="/registro" element={<Register />} />
-        <Route path="/inicio" element={<Dashboard />} />
-        <Route path="/modulos" element={<Modulos />} />
-        <Route path="/modulos/:id" element={<ModuloDetalle />} />
-        <Route path="/foro" element={<Forum />} />
-        <Route path="/avance" element={<Avance />} />
-        <Route path="/ayuda" element={<Ayuda />} />
-        <Route path="/cuenta" element={<Profile />} />
+        <Route path="/inicio" element={<RutaProtegida><Dashboard /></RutaProtegida>} />
+        <Route path="/modulos" element={<RutaProtegida><Modulos /></RutaProtegida>} />
+        <Route path="/modulos/:id" element={<RutaProtegida><ModuloDetalle /></RutaProtegida>} />
+        <Route path="/foro" element={<RutaProtegida><Forum /></RutaProtegida>} />
+        <Route path="/avance" element={<RutaProtegida><Avance /></RutaProtegida>} />
+        <Route path="/ayuda" element={<RutaProtegida><Ayuda /></RutaProtegida>} />
+        <Route path="/cuenta" element={<RutaProtegida><Profile /></RutaProtegida>} />
         {/* Rutas antiguas */}
         <Route path="/login" element={<Navigate to="/entrar" replace />} />
         <Route path="/dashboard" element={<Navigate to="/inicio" replace />} />

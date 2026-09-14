@@ -1,33 +1,42 @@
 import { Link } from "react-router-dom";
 import Layout from "@/components/layout/Layout";
-import { modulos, avanceEjemplo, estadoDe } from "@/content/modulos";
+import { modulos } from "@/content/modulos";
 import BarraAvance from "@/components/BarraAvance";
+import { useSesion } from "@/hooks/useSesion";
+import { useAvance } from "@/hooks/useAvance";
 import { ArrowRight, MessageSquare, HelpCircle } from "lucide-react";
 
 /* Inicio: una sola cosa importante — continuar donde quedó. */
 export default function Dashboard() {
-  const nombre = "docente"; // Entrega 2: nombre real guardado en el equipo
-  const enCurso = modulos.find((m) => estadoDe(m, avanceEjemplo).tipo === "en-curso");
-  const siguiente = enCurso ?? modulos.find((m) => estadoDe(m, avanceEjemplo).tipo === "pendiente");
-  const completados = modulos.filter((m) => estadoDe(m, avanceEjemplo).tipo === "completado").length;
+  const { usuario } = useSesion();
+  const { listo, estadoDe, completados, enCurso, siguiente } = useAvance(usuario?.correo);
+  const primerNombre = usuario?.nombre.split(" ")[0] ?? "docente";
 
   return (
     <Layout>
-      <h1 className="mb-8">Buen día, {nombre}.</h1>
+      <h1 className="mb-8">Buen día, {primerNombre}.</h1>
 
-      {siguiente && (
+      {listo && siguiente && (
         <section className="panel border-primary bg-integra-rioClaro mb-10">
-          <p className="text-base font-bold mb-2">{enCurso ? "Continuar donde quedé" : "Siguiente módulo"}</p>
+          <p className="text-base font-bold mb-2">{enCurso ? "Continuar donde quedé" : completados === 0 ? "Para empezar" : "Siguiente módulo"}</p>
           <h2 className="mb-3">Módulo {siguiente.numero}: {siguiente.titulo}</h2>
           <p className="mb-5">{siguiente.paraQue}</p>
           {enCurso && (
             <div className="mb-6">
-              <BarraAvance hechos={estadoDe(siguiente, avanceEjemplo).hechos} total={siguiente.pasos} />
+              <BarraAvance hechos={estadoDe(siguiente).hechos} total={siguiente.pasos} />
             </div>
           )}
           <Link to={`/modulos/${siguiente.id}`} className="btn-principal">
             {enCurso ? "Continuar" : "Empezar"} <ArrowRight className="h-6 w-6" aria-hidden="true" />
           </Link>
+        </section>
+      )}
+
+      {listo && !siguiente && (
+        <section className="panel border-integra-selva bg-integra-selvaClaro mb-10">
+          <h2 className="mb-3">Completó los seis módulos.</h2>
+          <p className="mb-5">Puede repasar cualquiera cuando quiera, o ayudar a un colega en el foro.</p>
+          <Link to="/modulos" className="btn-principal">Ver mis módulos</Link>
         </section>
       )}
 

@@ -1,5 +1,6 @@
-import { Link, useLocation } from "react-router-dom";
-import { Home, BookOpen, MessageSquare, BarChart3, HelpCircle, LogOut, GraduationCap } from "lucide-react";
+import { Link, useLocation, useNavigate } from "react-router-dom";
+import { cerrarSesion, registrarEvento, sesionActual } from "@/lib/almacen";
+import { Home, BookOpen, MessageSquare, BarChart3, HelpCircle, LogOut, GraduationCap, User } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
 
 /*
@@ -17,6 +18,13 @@ export const entradasMenu = [
 export default function Navegacion() {
   const { pathname } = useLocation();
   const esMovil = useIsMobile();
+  const navigate = useNavigate();
+  const salir = async () => {
+    const correo = sesionActual();
+    if (correo) await registrarEvento(correo, "salir");
+    cerrarSesion();
+    navigate("/");
+  };
 
   if (esMovil) {
     return (
@@ -71,11 +79,15 @@ export default function Navegacion() {
         })}
       </ul>
 
-      <div className="p-4 border-t-2 border-border">
-        <Link to="/" className="flex items-center gap-3 rounded-lg px-4 min-h-[3.25rem] no-underline text-foreground font-bold border-2 border-border hover:bg-secondary">
+      <div className="p-4 border-t-2 border-border flex flex-col gap-2">
+        <Link to="/cuenta" className="flex items-center gap-3 rounded-lg px-4 min-h-[3.25rem] no-underline text-foreground font-bold border-2 border-transparent hover:bg-secondary">
+          <User className="h-6 w-6" aria-hidden="true" />
+          Mi cuenta
+        </Link>
+        <button type="button" onClick={salir} className="flex items-center gap-3 rounded-lg px-4 min-h-[3.25rem] text-foreground font-bold border-2 border-border hover:bg-secondary text-left">
           <LogOut className="h-6 w-6" aria-hidden="true" />
           Salir
-        </Link>
+        </button>
       </div>
     </nav>
   );

@@ -1,36 +1,43 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Layout from "@/components/layout/Layout";
 import PageHeader from "@/components/layout/PageHeader";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
-import { MessageSquare } from "lucide-react";
+import { MessageSquare, Clock, Check } from "lucide-react";
+import { useSesion } from "@/hooks/useSesion";
+import { useConexion } from "@/hooks/useConexion";
+import { leerForo, publicarEnForo, registrarEvento, type MensajeForo } from "@/lib/almacen";
 
-type Mensaje = { id: number; autor: string; fecha: string; titulo: string; texto: string; respuestas: number };
-
-/* Mensajes de ejemplo. En la Entrega 2 se guardan en el equipo y se envían cuando hay señal. */
-const mensajesIniciales: Mensaje[] = [
-  { id: 1, autor: "Profesora de primaria", fecha: "hace 2 días", titulo: "¿Cómo paso una foto del celular al computador?", texto: "Tomé fotos de los trabajos de los niños y quiero mostrarlas en el computador de la sede. ¿Alguien sabe cómo se hace con el cable?", respuestas: 2 },
-  { id: 2, autor: "Docente multigrado", fecha: "hace 5 días", titulo: "Se me apagó el computador en mitad de la clase", texto: "Estaba mostrando una presentación y se apagó solo. ¿Puede ser la batería? ¿Qué hago para que no vuelva a pasar?", respuestas: 3 },
-];
+function fechaCorta(iso: string) {
+  return new Intl.DateTimeFormat("es-CO", { day: "numeric", month: "long", hour: "numeric", minute: "2-digit" }).format(new Date(iso));
+}
 
 export default function Forum() {
-  const [mensajes, setMensajes] = useState(mensajesIniciales);
+  const { usuario } = useSesion();
+  const enLinea = useConexion();
+  const [mensajes, setMensajes] = useState<MensajeForo[]>([]);
   const [mostrarFormulario, setMostrarFormulario] = useState(false);
   const [titulo, setTitulo] = useState("");
   const [texto, setTexto] = useState("");
   const [error, setError] = useState("");
   const [aviso, setAviso] = useState("");
 
-  const publicar = (e: React.FormEvent) => {
+  const cargar = () => leerForo().then(setMensajes);
+  useEffect(() => { cargar(); }, [enLinea]);
+
+  const publicar = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!usuario) return;
     if (titulo.trim().length < 5) return setError("Escriba una pregunta o un título (mínimo 5 letras).");
     if (texto.trim().length < 10) return setError("Cuente un poco más para que los colegas puedan ayudar.");
-    setMensajes([{ id: Date.now(), autor: "Usted", fecha: "ahora", titulo: titulo.trim(), texto: texto.trim(), respuestas: 0 }, ...mensajes]);
+    await publicarEnForo(usuario.correo, usuario.nombre, titulo.trim(), texto.trim(), enLinea);
+    await registrarEvento(usuario.correo, "foro_publicar", enLinea ? "enviado" : "pendiente");
     setTitulo(""); setTexto(""); setError("");
     setMostrarFormulario(false);
-    setAviso("Su mensaje quedó publicado. Si no hay señal, se enviará a los colegas cuando la haya.");
+    setAviso(enLinea ? "Su mensaje quedó publicado." : "Su mensaje quedó guardado en este equipo. Se enviará a los colegas cuando haya señal.");
+    cargar();
   };
 
   return (
@@ -64,16 +71,27 @@ export default function Forum() {
         </form>
       )}
 
-      <ul className="space-y-4">
-        {mensajes.map((m) => (
-          <li key={m.id} className="panel">
-            <h2 className="mb-1">{m.titulo}</h2>
-            <p className="text-base mb-3">{m.autor} · {m.fecha}</p>
-            <p className="mb-4">{m.texto}</p>
-            <p className="font-bold">{m.respuestas === 0 ? "Todavía nadie responde" : m.respuestas === 1 ? "1 respuesta" : `${m.respuestas} respuestas`}</p>
-          </li>
-        ))}
-      </ul>
+      {mensajes.length === 0 ? (
+        <div className="panel bg-integra-arenaClaro">
+          <p className="font-bold mb-1">Todavía no hay mensajes.</p>
+          <p>Sea la primera persona en escribir: una pregunta suya seguramente le sirve a otro colega.</p>
+        </div>
+      ) : (
+        <ul className="space-y-4">
+          {mensajes.map((m) => (
+            <li key={m.id} className="panel">
+              <h2 className="mb-1">{m.titulo}</h2>
+              <p className="text-base mb-3">{m.autor} · {fechaCorta(m.creadoEn)}</p>
+              <p className="mb-4">{m.texto}</p>
+              {m.estado === "pendiente" ? (
+                <p className="inline-flex items-center gap-2 font-bold text-integra-ambar"><Clock className="h-5 w-5" aria-hidden="true" /> Guardado en este equipo; se enviará cuando haya señal</p>
+              ) : (
+                <p className="inline-flex items-center gap-2 font-bold text-integra-selva"><Check className="h-5 w-5" aria-hidden="true" /> Enviado</p>
+              )}
+            </li>
+          ))}
+        </ul>
+      )}
     </Layout>
   );
 }
