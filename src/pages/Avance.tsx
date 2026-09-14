@@ -4,13 +4,14 @@ import PageHeader from "@/components/layout/PageHeader";
 import BarraAvance from "@/components/BarraAvance";
 import EstadoModulo from "@/components/EstadoModulo";
 import { modulos } from "@/content/modulos";
+import { pasosDe } from "@/content/pasos";
 import { useSesion } from "@/hooks/useSesion";
 import { useAvance } from "@/hooks/useAvance";
 
 export default function Avance() {
   const { usuario } = useSesion();
   const { estadoDe, completados } = useAvance(usuario?.correo);
-  const totalPasos = modulos.reduce((s, m) => s + m.pasos, 0);
+  const totalPasos = modulos.reduce((s, m) => s + pasosDe(m.id).length, 0);
   const hechos = modulos.reduce((s, m) => s + estadoDe(m).hechos, 0);
 
   return (
@@ -28,7 +29,7 @@ export default function Avance() {
           return (
             <li key={m.id} className="panel flex flex-wrap items-center justify-between gap-3">
               <Link to={`/modulos/${m.id}`} className="font-bold text-[1.1rem]">Módulo {m.numero}: {m.titulo}</Link>
-              <EstadoModulo tipo={e.tipo} hechos={e.hechos} total={m.pasos} />
+              <EstadoModulo tipo={e.tipo} hechos={e.hechos} total={pasosDe(m.id).length} />
             </li>
           );
         })}

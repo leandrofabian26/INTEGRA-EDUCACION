@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { guardarAvance, leerAvance, registrarEvento, type Avance } from "@/lib/almacen";
 import { modulos, type Modulo } from "@/content/modulos";
+import { pasosDe } from "@/content/pasos";
 
 /* Avance real del docente, leído y guardado en el equipo. */
 export function useAvance(correo: string | undefined) {
@@ -14,18 +15,18 @@ export function useAvance(correo: string | undefined) {
 
   const estadoDe = useCallback((modulo: Modulo) => {
     const a = avance.find((x) => x.moduloId === modulo.id);
-    const hechos = Math.min(a?.pasosCompletados ?? 0, modulo.pasos);
+    const hechos = Math.min(a?.pasosCompletados ?? 0, pasosDe(modulo.id).length);
     if (hechos === 0) return { tipo: "pendiente" as const, hechos };
-    if (hechos >= modulo.pasos) return { tipo: "completado" as const, hechos };
+    if (hechos >= pasosDe(modulo.id).length) return { tipo: "completado" as const, hechos };
     return { tipo: "en-curso" as const, hechos };
   }, [avance]);
 
   const completarPaso = useCallback(async (modulo: Modulo) => {
     if (!correo) return;
     const actual = avance.find((x) => x.moduloId === modulo.id)?.pasosCompletados ?? 0;
-    const nuevo = Math.min(actual + 1, modulo.pasos);
+    const nuevo = Math.min(actual + 1, pasosDe(modulo.id).length);
     await guardarAvance(correo, modulo.id, nuevo);
-    await registrarEvento(correo, nuevo >= modulo.pasos ? "modulo_completado" : "paso_completado", `${modulo.id}:${nuevo}/${modulo.pasos}`);
+    await registrarEvento(correo, nuevo >= pasosDe(modulo.id).length ? "modulo_completado" : "paso_completado", `${modulo.id}:${nuevo}/${pasosDe(modulo.id).length}`);
     setAvance(await leerAvance(correo));
   }, [correo, avance]);
 

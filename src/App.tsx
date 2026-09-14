@@ -11,6 +11,7 @@ import Forum from "./pages/Forum";
 import Avance from "./pages/Avance";
 import Ayuda from "./pages/Ayuda";
 import Profile from "./pages/Profile";
+import Cuestionario from "./pages/Cuestionario";
 import NotFound from "./pages/NotFound";
 import { aplicarEscalaGuardada } from "@/lib/fontSize";
 import RutaProtegida from "@/components/layout/RutaProtegida";
@@ -32,6 +33,7 @@ const App = () => (
         <Route path="/avance" element={<RutaProtegida><Avance /></RutaProtegida>} />
         <Route path="/ayuda" element={<RutaProtegida><Ayuda /></RutaProtegida>} />
         <Route path="/cuenta" element={<RutaProtegida><Profile /></RutaProtegida>} />
+        <Route path="/cuestionario/:momento" element={<RutaProtegida><Cuestionario /></RutaProtegida>} />
         {/* Rutas antiguas */}
         <Route path="/login" element={<Navigate to="/entrar" replace />} />
         <Route path="/dashboard" element={<Navigate to="/inicio" replace />} />

@@ -3,6 +3,7 @@ import Layout from "@/components/layout/Layout";
 import PageHeader from "@/components/layout/PageHeader";
 import EstadoModulo from "@/components/EstadoModulo";
 import { modulos } from "@/content/modulos";
+import { pasosDe } from "@/content/pasos";
 import { useSesion } from "@/hooks/useSesion";
 import { useAvance } from "@/hooks/useAvance";
 import { Clock, WifiOff, Wifi, ArrowRight } from "lucide-react";
@@ -23,11 +24,11 @@ export default function Modulos() {
               <div className="flex flex-col gap-3">
                 <div className="flex flex-wrap items-center justify-between gap-3">
                   <h2>Módulo {m.numero}: {m.titulo}</h2>
-                  <EstadoModulo tipo={estado.tipo} hechos={estado.hechos} total={m.pasos} />
+                  <EstadoModulo tipo={estado.tipo} hechos={estado.hechos} total={pasosDe(m.id).length} />
                 </div>
                 <p>{m.paraQue}</p>
                 <div className="flex flex-wrap gap-x-6 gap-y-2 text-base">
-                  <span className="inline-flex items-center gap-2"><Clock className="h-5 w-5" aria-hidden="true" /> {m.duracion} · {m.pasos} pasos</span>
+                  <span className="inline-flex items-center gap-2"><Clock className="h-5 w-5" aria-hidden="true" /> {m.duracion} · {pasosDe(m.id).length} pasos</span>
                   {m.necesitaInternet ? (
                     <span className="inline-flex items-center gap-2 text-integra-ambar font-bold"><Wifi className="h-5 w-5" aria-hidden="true" /> Necesita señal de internet</span>
                   ) : (

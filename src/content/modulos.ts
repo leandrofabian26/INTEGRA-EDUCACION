@@ -3,7 +3,7 @@
   Son un punto de partida: los módulos definitivos se construyen con las
   barreras que identifiquen los docentes en el ciclo 1 de la investigación.
   Todos están pensados para funcionar sin conexión a internet.
-  En la Entrega 3 cada módulo se dividirá en pasos (cápsulas de 5 a 10 minutos).
+  Los pasos (cápsulas de 5 a 10 minutos) están en src/content/pasos.ts.
 */
 export type Modulo = {
   id: string;
@@ -72,16 +72,3 @@ export const modulos: Modulo[] = [
   },
 ];
 
-/* Estado de avance de ejemplo. En la Entrega 2 se guardará en el equipo. */
-export type Avance = { moduloId: string; pasosCompletados: number };
-export const avanceEjemplo: Avance[] = [
-  { moduloId: "computador", pasosCompletados: 5 },
-  { moduloId: "guia", pasosCompletados: 2 },
-];
-
-export function estadoDe(modulo: Modulo, avance: Avance[]) {
-  const a = avance.find((x) => x.moduloId === modulo.id);
-  if (!a || a.pasosCompletados === 0) return { tipo: "pendiente" as const, hechos: 0 };
-  if (a.pasosCompletados >= modulo.pasos) return { tipo: "completado" as const, hechos: modulo.pasos };
-  return { tipo: "en-curso" as const, hechos: a.pasosCompletados };
-}

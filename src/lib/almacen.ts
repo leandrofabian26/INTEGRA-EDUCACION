@@ -15,27 +15,40 @@ export type MensajeForo = {
   creadoEn: string; estado: "pendiente" | "enviado"; enviadoEn?: string;
 };
 export type Evento = { id?: number; correo: string; tipo: string; detalle: string; fecha: string; enLinea: boolean };
+export type RespuestaForo = { id: string; mensajeId: string; correo: string; autor: string; texto: string; creadoEn: string; estado: "pendiente" | "enviado"; enviadoEn?: string };
+export type Cuestionario = { id: string; correo: string; momento: "inicio" | "cierre"; respuestas: Record<string, string | number>; creadoEn: string };
 
 interface EsquemaIntegra extends DBSchema {
   usuarios: { key: string; value: Usuario };
   avance: { key: string; value: Avance; indexes: { porCorreo: string } };
   foro: { key: string; value: MensajeForo; indexes: { porEstado: string } };
   eventos: { key: number; value: Evento; indexes: { porCorreo: string } };
+  respuestas: { key: string; value: RespuestaForo; indexes: { porMensaje: string; porEstado: string } };
+  cuestionarios: { key: string; value: Cuestionario; indexes: { porCorreo: string } };
 }
 
 let bd: Promise<IDBPDatabase<EsquemaIntegra>> | null = null;
 
 function abrir() {
   if (!bd) {
-    bd = openDB<EsquemaIntegra>("integra", 1, {
-      upgrade(db) {
-        db.createObjectStore("usuarios", { keyPath: "correo" });
-        const av = db.createObjectStore("avance", { keyPath: "clave" });
-        av.createIndex("porCorreo", "correo");
-        const fo = db.createObjectStore("foro", { keyPath: "id" });
-        fo.createIndex("porEstado", "estado");
-        const ev = db.createObjectStore("eventos", { keyPath: "id", autoIncrement: true });
-        ev.createIndex("porCorreo", "correo");
+    bd = openDB<EsquemaIntegra>("integra", 2, {
+      upgrade(db, versionAnterior) {
+        if (versionAnterior < 1) {
+          db.createObjectStore("usuarios", { keyPath: "correo" });
+          const av = db.createObjectStore("avance", { keyPath: "clave" });
+          av.createIndex("porCorreo", "correo");
+          const fo = db.createObjectStore("foro", { keyPath: "id" });
+          fo.createIndex("porEstado", "estado");
+          const ev = db.createObjectStore("eventos", { keyPath: "id", autoIncrement: true });
+          ev.createIndex("porCorreo", "correo");
+        }
+        if (versionAnterior < 2) {
+          const re = db.createObjectStore("respuestas", { keyPath: "id" });
+          re.createIndex("porMensaje", "mensajeId");
+          re.createIndex("porEstado", "estado");
+          const cu = db.createObjectStore("cuestionarios", { keyPath: "id" });
+          cu.createIndex("porCorreo", "correo");
+        }
       },
     });
   }
@@ -119,7 +132,53 @@ export async function sincronizarPendientes(): Promise<number> {
   for (const m of pendientes) {
     await db.put("foro", { ...m, estado: "enviado", enviadoEn: ahora() });
   }
-  return pendientes.length;
+  const respuestas = await db.getAllFromIndex("respuestas", "porEstado", "pendiente");
+  for (const r of respuestas) {
+    await db.put("respuestas", { ...r, estado: "enviado", enviadoEn: ahora() });
+  }
+  return pendientes.length + respuestas.length;
+}
+
+/* ---------- respuestas del foro ---------- */
+export async function leerRespuestas(mensajeId: string): Promise<RespuestaForo[]> {
+  const r = await (await abrir()).getAllFromIndex("respuestas", "porMensaje", mensajeId);
+  return r.sort((a, b) => a.creadoEn.localeCompare(b.creadoEn));
+}
+
+export async function contarRespuestas(): Promise<Record<string, number>> {
+  const todas = await (await abrir()).getAll("respuestas");
+  return todas.reduce<Record<string, number>>((acc, r) => { acc[r.mensajeId] = (acc[r.mensajeId] ?? 0) + 1; return acc; }, {});
+}
+
+export async function responderEnForo(mensajeId: string, correo: string, autor: string, texto: string, enLinea: boolean) {
+  const r: RespuestaForo = {
+    id: `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+    mensajeId, correo, autor, texto, creadoEn: ahora(),
+    estado: enLinea ? "enviado" : "pendiente", enviadoEn: enLinea ? ahora() : undefined,
+  };
+  await (await abrir()).put("respuestas", r);
+  return r;
+}
+
+/* ---------- cuestionario de autopercepción ---------- */
+export async function guardarCuestionario(correo: string, momento: "inicio" | "cierre", respuestas: Record<string, string | number>) {
+  const c: Cuestionario = { id: `${correo}|${momento}|${Date.now()}`, correo, momento, respuestas, creadoEn: ahora() };
+  await (await abrir()).put("cuestionarios", c);
+  return c;
+}
+
+export async function cuestionariosDe(correo: string): Promise<Cuestionario[]> {
+  return (await abrir()).getAllFromIndex("cuestionarios", "porCorreo", correo);
+}
+
+export async function leerCuestionarios(): Promise<Cuestionario[]> {
+  return (await abrir()).getAll("cuestionarios");
+}
+
+export function cuestionariosACSV(lista: Cuestionario[], claves: string[]): string {
+  const esc = (v: unknown) => `"${String(v ?? "").replace(/"/g, '""')}"`;
+  const filas = lista.map((c) => [c.creadoEn, c.correo, c.momento, ...claves.map((k) => c.respuestas[k])].map(esc).join(";"));
+  return ["fecha;usuario;momento;" + claves.join(";"), ...filas].join("\n");
 }
 
 /* ---------- eventos (registro de uso) ---------- */
