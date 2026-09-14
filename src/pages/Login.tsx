@@ -1,91 +1,73 @@
-
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { GraduationCap } from "lucide-react";
-import { useToast } from "@/components/ui/use-toast";
+import { Button } from "@/components/ui/button";
+import { GraduationCap, Eye, EyeOff } from "lucide-react";
 
+/*
+  Inicio de sesión de demostración. La validación real y el guardado local
+  se implementan en la Entrega 2.
+*/
 export default function Login() {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [loading, setLoading] = useState(false);
+  const [correo, setCorreo] = useState("");
+  const [clave, setClave] = useState("");
+  const [verClave, setVerClave] = useState(false);
+  const [error, setError] = useState("");
   const navigate = useNavigate();
-  const { toast } = useToast();
 
-  const handleLogin = (e: React.FormEvent) => {
+  const entrar = (e: React.FormEvent) => {
     e.preventDefault();
-    setLoading(true);
-
-    // Mock login functionality
-    setTimeout(() => {
-      setLoading(false);
-      toast({
-        title: "Inicio de sesión exitoso",
-        description: "Bienvenido a Integra",
-      });
-      navigate("/dashboard");
-    }, 1000);
+    if (!correo.includes("@")) {
+      setError("El correo debe tener una @. Por ejemplo: maria@correo.com");
+      return;
+    }
+    if (clave.length < 4) {
+      setError("La contraseña debe tener al menos 4 caracteres.");
+      return;
+    }
+    setError("");
+    navigate("/inicio");
   };
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-b from-background to-secondary/30 p-4">
+    <div className="min-h-screen flex flex-col items-center justify-center p-6">
       <div className="w-full max-w-md">
-        <div className="text-center mb-8">
-          <div className="flex justify-center mb-4">
-            <div className="bg-primary rounded-full p-3 shadow-lg">
-              <GraduationCap className="h-10 w-10 text-white" />
+        <Link to="/" className="flex items-center gap-3 mb-8 no-underline text-foreground">
+          <GraduationCap className="h-9 w-9 text-primary" aria-hidden="true" />
+          <span className="text-[1.4rem] font-bold">INTEGRA</span>
+        </Link>
+
+        <h1 className="mb-6">Entrar</h1>
+
+        <form onSubmit={entrar} className="panel space-y-6" noValidate>
+          <div className="space-y-2">
+            <Label htmlFor="correo">Correo</Label>
+            <Input id="correo" type="email" autoComplete="email" placeholder="maria@correo.com" value={correo} onChange={(e) => setCorreo(e.target.value)} />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="clave">Contraseña</Label>
+            <div className="flex gap-2">
+              <Input id="clave" type={verClave ? "text" : "password"} autoComplete="current-password" value={clave} onChange={(e) => setClave(e.target.value)} />
+              <Button type="button" variant="outline" size="icon" className="min-h-[3.25rem] w-14 shrink-0" onClick={() => setVerClave(!verClave)} aria-label={verClave ? "Ocultar contraseña" : "Mostrar contraseña"}>
+                {verClave ? <EyeOff /> : <Eye />}
+              </Button>
             </div>
           </div>
-          <h1 className="text-3xl font-bold">Iniciar Sesión</h1>
-          <p className="text-muted-foreground mt-2">Ingresa a tu cuenta de Integra</p>
-        </div>
 
-        <div className="bg-card shadow-sm border rounded-xl p-6 animate-fade-in">
-          <form onSubmit={handleLogin} className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="email">Correo Electrónico</Label>
-              <Input
-                id="email"
-                type="email"
-                placeholder="ejemplo@correo.com"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
-                className="text-lg py-6"
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="password">Contraseña</Label>
-              <Input
-                id="password"
-                type="password"
-                placeholder="••••••••"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-                className="text-lg py-6"
-              />
-            </div>
-            <Button
-              type="submit"
-              className="w-full text-lg py-6"
-              disabled={loading}
-            >
-              {loading ? "Iniciando sesión..." : "Iniciar Sesión"}
-            </Button>
-          </form>
-
-          <div className="mt-6 text-center">
-            <p>
-              ¿No tienes una cuenta?{" "}
-              <Link to="/register" className="text-primary font-semibold hover:underline">
-                Regístrate aquí
-              </Link>
+          {error && (
+            <p role="alert" className="rounded-lg border-2 border-destructive bg-red-50 text-destructive font-bold px-4 py-3">
+              {error}
             </p>
-          </div>
-        </div>
+          )}
+
+          <Button type="submit" className="w-full" size="lg">Entrar</Button>
+        </form>
+
+        <p className="mt-6">
+          ¿No tiene cuenta todavía? <Link to="/registro">Crear mi cuenta</Link>
+        </p>
       </div>
     </div>
   );

@@ -1,23 +1,27 @@
-
 import { ReactNode } from "react";
-import Sidebar from "./Sidebar";
+import Navegacion from "./Navegacion";
+import ControlLetra from "./ControlLetra";
 import { useIsMobile } from "@/hooks/use-mobile";
 
-type LayoutProps = {
-  children: ReactNode;
-};
+type Props = { children: ReactNode };
 
-export default function Layout({ children }: LayoutProps) {
-  const isMobile = useIsMobile();
-  
+export default function Layout({ children }: Props) {
+  const esMovil = useIsMobile();
+
   return (
     <div className="flex min-h-screen">
-      <Sidebar />
-      <main className={`flex-1 ${isMobile ? 'pb-20' : ''}`}>
-        <div className="container max-w-7xl mx-auto px-4 sm:px-6">
-          {children}
-        </div>
-      </main>
+      <Navegacion />
+      <div className="flex-1 min-w-0">
+        <header className="flex items-center justify-between gap-4 px-5 md:px-10 py-3 border-b-2 border-border bg-card">
+          <span className="text-[1.05rem]">
+            {esMovil ? <strong>INTEGRA</strong> : "Docentes de Agua bonita, San José del Guaviare"}
+          </span>
+          <ControlLetra />
+        </header>
+        <main className={`px-5 md:px-10 py-6 ${esMovil ? "pb-28" : ""}`}>
+          <div className="max-w-[880px]">{children}</div>
+        </main>
+      </div>
     </div>
   );
 }

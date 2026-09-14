@@ -1,116 +1,84 @@
+@import "@fontsource/atkinson-hyperlegible/400.css";
+@import "@fontsource/atkinson-hyperlegible/700.css";
 
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-@import url('https://fonts.googleapis.com/css2?family=Nunito+Sans:opsz,wght@6..12,400;6..12,600;6..12,700&family=Open+Sans:wght@400;600&display=swap');
-
+/*
+  INTEGRA — hoja base.
+  Un solo tema (claro, alto contraste). El tamaño de letra se controla con
+  la variable --escala, que ajusta el control "A− / A+" de la cabecera.
+*/
 @layer base {
   :root {
-    --background: 195 100% 98%;
-    --foreground: 222.2 84% 4.9%;
+    --escala: 1;
 
+    --background: 46 100% 98%;      /* papel  #FFFDF7 */
+    --foreground: 0 0% 10%;         /* tinta  #1A1A1A */
     --card: 0 0% 100%;
-    --card-foreground: 222.2 84% 4.9%;
-
+    --card-foreground: 0 0% 10%;
     --popover: 0 0% 100%;
-    --popover-foreground: 222.2 84% 4.9%;
-
-    --primary: 196 82% 49%;
-    --primary-foreground: 210 40% 98%;
-
-    --secondary: 196 76% 87%;
-    --secondary-foreground: 222.2 47.4% 11.2%;
-
-    --muted: 210 40% 96.1%;
-    --muted-foreground: 215.4 16.3% 46.9%;
-
-    --accent: 27 100% 91%;
-    --accent-foreground: 222.2 47.4% 11.2%;
-
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 210 40% 98%;
-
-    --border: 214.3 31.8% 91.4%;
-    --input: 214.3 31.8% 91.4%;
-    --ring: 196 82% 49%;
-
-    --radius: 0.75rem;
-
-    --sidebar-background: 0 0% 100%;
-    --sidebar-foreground: 240 5.3% 26.1%;
-    --sidebar-primary: 196 82% 49%;
-    --sidebar-primary-foreground: 0 0% 98%;
-    --sidebar-accent: 240 4.8% 95.9%;
-    --sidebar-accent-foreground: 240 5.9% 10%;
-    --sidebar-border: 220 13% 91%;
-    --sidebar-ring: 196 82% 49%;
+    --popover-foreground: 0 0% 10%;
+    --primary: 213 65% 33%;         /* río    #1D4E89 */
+    --primary-foreground: 0 0% 100%;
+    --secondary: 213 50% 93%;       /* río claro */
+    --secondary-foreground: 0 0% 10%;
+    --muted: 42 45% 94%;            /* arena claro */
+    --muted-foreground: 0 0% 25%;   /* #404040 — nunca gris claro */
+    --accent: 42 45% 94%;
+    --accent-foreground: 0 0% 10%;
+    --destructive: 0 70% 35%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 42 32% 85%;           /* arena  #E6DFCE */
+    --input: 0 0% 45%;              /* borde de campos bien visible */
+    --ring: 213 65% 33%;
+    --radius: 0.5rem;
   }
 
-  .dark {
-    --background: 222.2 47.4% 11.2%;
-    --foreground: 210 40% 98%;
+  * { @apply border-border; }
 
-    --card: 222.2 47.4% 11.2%;
-    --card-foreground: 210 40% 98%;
-
-    --popover: 222.2 47.4% 11.2%;
-    --popover-foreground: 210 40% 98%;
-
-    --primary: 196 82% 49%;
-    --primary-foreground: 222.2 47.4% 11.2%;
-
-    --secondary: 217.2 32.6% 17.5%;
-    --secondary-foreground: 210 40% 98%;
-
-    --muted: 217.2 32.6% 17.5%;
-    --muted-foreground: 215 20.2% 65.1%;
-
-    --accent: 27 60% 40%;
-    --accent-foreground: 210 40% 98%;
-
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 210 40% 98%;
-
-    --border: 217.2 32.6% 17.5%;
-    --input: 217.2 32.6% 17.5%;
-    --ring: 196 82% 49%;
-
-    --sidebar-background: 222.2 47.4% 11.2%;
-    --sidebar-foreground: 210 40% 98%;
-    --sidebar-primary: 196 82% 49%;
-    --sidebar-primary-foreground: 210 40% 98%;
-    --sidebar-accent: 217.2 32.6% 17.5%;
-    --sidebar-accent-foreground: 210 40% 98%;
-    --sidebar-border: 217.2 32.6% 17.5%;
-    --sidebar-ring: 196 82% 49%;
+  html {
+    font-size: calc(18px * var(--escala));
   }
-}
-
-@layer base {
-  * {
-    @apply border-border;
+  @media (min-width: 768px) {
+    html { font-size: calc(20px * var(--escala)); }
   }
 
   body {
-    @apply bg-background text-foreground font-opensans;
+    @apply bg-background text-foreground font-sans;
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
   }
 
-  h1, h2, h3, h4, h5, h6 {
-    @apply font-nunito font-bold;
+  h1, h2, h3, h4 { @apply font-bold; line-height: 1.25; }
+  h1 { font-size: 2rem; }
+  h2 { font-size: 1.5rem; }
+  h3 { font-size: 1.2rem; }
+
+  p { max-width: 38rem; }
+
+  a { @apply text-primary underline underline-offset-4 decoration-2; }
+
+  :focus-visible {
+    outline: 3px solid hsl(var(--ring));
+    outline-offset: 3px;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { animation: none !important; transition: none !important; }
   }
 }
 
 @layer components {
-  .btn-primary {
-    @apply bg-reduk-blue text-white px-6 py-3 rounded-lg shadow-md hover:bg-reduk-lightBlue transition-colors text-lg font-medium;
+  /* Botón grande de acción principal: uno por pantalla */
+  .btn-principal {
+    @apply inline-flex items-center justify-center gap-3 rounded-lg bg-primary text-primary-foreground font-bold px-6 min-h-[3.25rem] text-[1.1rem] border-2 border-primary no-underline hover:bg-[#163d6b] hover:border-[#163d6b];
   }
-
-  .btn-secondary {
-    @apply bg-secondary text-secondary-foreground px-6 py-3 rounded-lg shadow-md hover:bg-secondary/80 transition-colors text-lg font-medium;
+  .btn-secundario {
+    @apply inline-flex items-center justify-center gap-3 rounded-lg bg-card text-primary font-bold px-6 min-h-[3.25rem] text-[1.1rem] border-2 border-primary no-underline hover:bg-secondary;
   }
-
-  .card-hover {
-    @apply transition-all duration-300 hover:-translate-y-1 hover:shadow-lg;
+  .panel {
+    @apply rounded-lg border-2 border-border bg-card p-6;
   }
 }

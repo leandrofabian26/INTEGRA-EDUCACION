@@ -1,43 +1,31 @@
-
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
-import { Button } from "@/components/ui/button";
+import { Link } from "react-router-dom";
 import { GraduationCap } from "lucide-react";
 
 export default function Welcome() {
-  const navigate = useNavigate();
-  const [loading, setLoading] = useState(false);
-
-  const handleStart = () => {
-    setLoading(true);
-    setTimeout(() => {
-      navigate("/login");
-    }, 500);
-  };
-
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-b from-background to-secondary/30 p-4">
-      <div className="max-w-md w-full text-center animate-fade-in">
-        <div className="flex justify-center mb-6">
-          <div className="bg-primary rounded-full p-4 shadow-lg">
-            <GraduationCap className="h-16 w-16 text-white" />
+    <div className="min-h-screen flex flex-col items-center justify-center p-6">
+      <div className="max-w-xl w-full">
+        <div className="flex items-center gap-4 mb-8">
+          <div className="bg-primary rounded-lg p-3">
+            <GraduationCap className="h-12 w-12 text-white" aria-hidden="true" />
           </div>
+          <span className="text-[2.6rem] font-bold leading-none">INTEGRA</span>
         </div>
-        
-        <h1 className="text-4xl md:text-5xl font-bold mb-3">Integra</h1>
-        <p className="text-xl md:text-2xl text-muted-foreground mb-8">Herramientas digitales para docentes del Guaviare</p>
-        
-        <p className="mb-10 text-lg">
-          Plataforma educativa diseñada para ayudar a los docentes de zonas rurales a implementar tecnologías digitales en el aula.
+
+        <h1 className="text-[2.2rem] mb-4">Aprender a usar la tecnología en el aula, paso a paso y sin afán.</h1>
+        <p className="text-[1.15rem] mb-3">
+          Un espacio para los docentes de la vereda Agua bonita. Funciona sin internet: lo que usted avance queda guardado en este computador.
         </p>
-        
-        <Button
-          className="w-full py-6 text-xl"
-          onClick={handleStart}
-          disabled={loading}
-        >
-          {loading ? "Cargando..." : "Empezar"}
-        </Button>
+        <p className="text-[1.15rem] mb-10">
+          Aquí no hay preguntas tontas. Equivocarse es parte de aprender.
+        </p>
+
+        <Link to="/entrar" className="btn-principal w-full text-[1.25rem] min-h-[3.75rem]">
+          Entrar
+        </Link>
+        <p className="mt-6 text-center">
+          ¿Primera vez? <Link to="/registro">Crear mi cuenta</Link>
+        </p>
       </div>
     </div>
   );

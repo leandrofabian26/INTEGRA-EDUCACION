@@ -1,233 +1,79 @@
-
 import { useState } from "react";
 import Layout from "@/components/layout/Layout";
 import PageHeader from "@/components/layout/PageHeader";
-import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Search, MessageSquare, Plus, ThumbsUp } from "lucide-react";
+import { MessageSquare } from "lucide-react";
 
-const forumCategories = [
-  { id: "all", name: "Todos" },
-  { id: "question", name: "Preguntas" },
-  { id: "discussion", name: "Discusiones" },
-  { id: "resource", name: "Recursos" },
-];
+type Mensaje = { id: number; autor: string; fecha: string; titulo: string; texto: string; respuestas: number };
 
-const forumPosts = [
-  {
-    id: 1,
-    title: "¿Cómo puedo crear grupos en Google Classroom?",
-    author: "María Rodríguez",
-    date: new Date(Date.now() - 3600000 * 2).toISOString().split('T')[0], // 2 horas atrás
-    category: "question",
-    replies: 8,
-    likes: 12,
-    content: "Estoy intentando organizar a mis estudiantes en grupos para un proyecto, pero no encuentro la opción en Google Classroom. ¿Alguien me puede ayudar?",
-  },
-  {
-    id: 2,
-    title: "Compartiendo mi experiencia con Kahoot",
-    author: "Carlos Gómez",
-    date: new Date(Date.now() - 86400000).toISOString().split('T')[0], // 1 día atrás
-    category: "discussion",
-    replies: 15,
-    likes: 23,
-    content: "He estado utilizando Kahoot para hacer mis clases más interactivas y los estudiantes están muy motivados. Comparto mi experiencia y algunos consejos.",
-  },
-  {
-    id: 3,
-    title: "Plantillas para planificar clases virtuales",
-    author: "Ana Martínez",
-    date: new Date(Date.now() - 86400000 * 2).toISOString().split('T')[0], // 2 días atrás
-    category: "resource",
-    replies: 12,
-    likes: 28,
-    content: "Comparto algunas plantillas que he creado para planificar clases virtuales. Espero que les sean útiles.",
-  },
-  {
-    id: 4,
-    title: "Problemas con la conexión en zonas rurales",
-    author: "Javier López",
-    date: new Date(Date.now() - 86400000 * 3).toISOString().split('T')[0], // 3 días atrás
-    category: "discussion",
-    replies: 18,
-    likes: 14,
-    content: "Quiero iniciar una discusión sobre las dificultades de conectividad en las zonas rurales y cómo podemos adaptar nuestras estrategias.",
-  },
-  {
-    id: 5,
-    title: "¿Qué herramienta recomiendan para crear evaluaciones?",
-    author: "Laura Díaz",
-    date: new Date(Date.now() - 86400000 * 4).toISOString().split('T')[0], // 4 días atrás
-    category: "question",
-    replies: 10,
-    likes: 9,
-    content: "Necesito crear evaluaciones en línea que sean fáciles de usar para mis estudiantes. ¿Qué herramientas me recomiendan?",
-  },
-  {
-    id: 6,
-    title: "Recursos educativos gratuitos para ciencias naturales",
-    author: "Patricia Ramírez",
-    date: new Date(Date.now() - 3600000 * 5).toISOString().split('T')[0], // 5 horas atrás
-    category: "resource",
-    replies: 5,
-    likes: 16,
-    content: "Encontré algunos recursos increíbles para enseñar ciencias naturales de forma digital. Los comparto con la comunidad.",
-  },
+/* Mensajes de ejemplo. En la Entrega 2 se guardan en el equipo y se envían cuando hay señal. */
+const mensajesIniciales: Mensaje[] = [
+  { id: 1, autor: "Profesora de primaria", fecha: "hace 2 días", titulo: "¿Cómo paso una foto del celular al computador?", texto: "Tomé fotos de los trabajos de los niños y quiero mostrarlas en el computador de la sede. ¿Alguien sabe cómo se hace con el cable?", respuestas: 2 },
+  { id: 2, autor: "Docente multigrado", fecha: "hace 5 días", titulo: "Se me apagó el computador en mitad de la clase", texto: "Estaba mostrando una presentación y se apagó solo. ¿Puede ser la batería? ¿Qué hago para que no vuelva a pasar?", respuestas: 3 },
 ];
 
 export default function Forum() {
-  const [searchQuery, setSearchQuery] = useState("");
-  const [selectedCategory, setSelectedCategory] = useState("all");
+  const [mensajes, setMensajes] = useState(mensajesIniciales);
+  const [mostrarFormulario, setMostrarFormulario] = useState(false);
+  const [titulo, setTitulo] = useState("");
+  const [texto, setTexto] = useState("");
+  const [error, setError] = useState("");
+  const [aviso, setAviso] = useState("");
 
-  const filteredPosts = forumPosts.filter((post) => {
-    const matchesSearch = post.title
-      .toLowerCase()
-      .includes(searchQuery.toLowerCase());
-    const matchesCategory =
-      selectedCategory === "all" || post.category === selectedCategory;
-    return matchesSearch && matchesCategory;
-  });
-
-  const formatDate = (dateString: string) => {
-    const date = new Date(dateString);
-    return new Intl.DateTimeFormat("es-CO", {
-      day: "numeric",
-      month: "long",
-      year: "numeric",
-    }).format(date);
-  };
-
-  const getInitials = (name: string) => {
-    return name
-      .split(" ")
-      .map((n) => n[0])
-      .join("")
-      .toUpperCase()
-      .substring(0, 2);
+  const publicar = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (titulo.trim().length < 5) return setError("Escriba una pregunta o un título (mínimo 5 letras).");
+    if (texto.trim().length < 10) return setError("Cuente un poco más para que los colegas puedan ayudar.");
+    setMensajes([{ id: Date.now(), autor: "Usted", fecha: "ahora", titulo: titulo.trim(), texto: texto.trim(), respuestas: 0 }, ...mensajes]);
+    setTitulo(""); setTexto(""); setError("");
+    setMostrarFormulario(false);
+    setAviso("Su mensaje quedó publicado. Si no hay señal, se enviará a los colegas cuando la haya.");
   };
 
   return (
     <Layout>
-      <div className="py-4">
-        <PageHeader
-          title="Foro de Docentes"
-          description="Comparte experiencias y consulta con otros educadores"
-        />
+      <PageHeader title="Foro" description="Un espacio de confianza entre colegas de la sede. Pregunte lo que necesite: aquí todos estamos aprendiendo." />
 
-        <div className="mb-6 flex justify-between items-center">
-          <div className="flex flex-col sm:flex-row gap-4">
-            <div className="relative flex-1">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-5 w-5" />
-              <Input
-                type="search"
-                placeholder="Buscar en el foro..."
-                className="pl-10 min-w-[250px]"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-              />
-            </div>
-            <div className="flex gap-2 overflow-x-auto pb-2">
-              {forumCategories.map((category) => (
-                <Button
-                  key={category.id}
-                  variant={selectedCategory === category.id ? "default" : "outline"}
-                  onClick={() => setSelectedCategory(category.id)}
-                  className="whitespace-nowrap"
-                >
-                  {category.name}
-                </Button>
-              ))}
-            </div>
-          </div>
-          <Button className="hidden sm:flex gap-2">
-            <Plus className="h-5 w-5" />
-            <span>Nuevo tema</span>
-          </Button>
-        </div>
-
-        <Button className="w-full sm:hidden mb-4 gap-2">
-          <Plus className="h-5 w-5" />
-          <span>Nuevo tema</span>
+      {!mostrarFormulario && (
+        <Button size="lg" className="mb-8" onClick={() => { setMostrarFormulario(true); setAviso(""); }}>
+          <MessageSquare aria-hidden="true" /> Escribir una pregunta
         </Button>
+      )}
 
-        <div className="space-y-4">
-          {filteredPosts.map((post) => (
-            <Card key={post.id} className="border card-hover">
-              <CardContent className="p-5">
-                <div className="flex gap-4">
-                  <Avatar className="h-10 w-10">
-                    <AvatarImage src="" />
-                    <AvatarFallback className="bg-primary text-primary-foreground">
-                      {getInitials(post.author)}
-                    </AvatarFallback>
-                  </Avatar>
-                  
-                  <div className="flex-1">
-                    <div className="flex justify-between items-start mb-1">
-                      <div>
-                        <h3 className="font-semibold text-lg">{post.title}</h3>
-                        <p className="text-sm text-muted-foreground">
-                          Por {post.author} • {formatDate(post.date)}
-                        </p>
-                      </div>
-                      <span className={`text-xs font-medium px-2 py-1 rounded-full ${
-                        post.category === "question" 
-                          ? "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400" 
-                          : post.category === "discussion" 
-                          ? "bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400"
-                          : "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400"
-                      }`}>
-                        {post.category === "question" 
-                          ? "Pregunta" 
-                          : post.category === "discussion" 
-                          ? "Discusión" 
-                          : "Recurso"}
-                      </span>
-                    </div>
-                    
-                    <p className="text-sm mt-3">{post.content}</p>
-                    
-                    <div className="flex items-center gap-4 mt-4">
-                      <Button variant="ghost" size="sm" className="text-muted-foreground flex items-center gap-1">
-                        <MessageSquare className="h-4 w-4" />
-                        {post.replies} {post.replies === 1 ? "respuesta" : "respuestas"}
-                      </Button>
-                      <Button variant="ghost" size="sm" className="text-muted-foreground flex items-center gap-1">
-                        <ThumbsUp className="h-4 w-4" />
-                        {post.likes}
-                      </Button>
-                      <Button variant="ghost" size="sm" className="ml-auto text-primary">
-                        Ver tema
-                      </Button>
-                    </div>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
-          
-          {filteredPosts.length === 0 && (
-            <div className="text-center py-10">
-              <p className="text-lg text-muted-foreground">
-                No se encontraron temas que coincidan con tu búsqueda.
-              </p>
-              <Button 
-                variant="outline" 
-                onClick={() => {
-                  setSearchQuery("");
-                  setSelectedCategory("all");
-                }}
-                className="mt-4"
-              >
-                Mostrar todos los temas
-              </Button>
-            </div>
-          )}
-        </div>
-      </div>
+      {aviso && <p role="status" className="panel border-integra-selva bg-integra-selvaClaro font-bold mb-8">{aviso}</p>}
+
+      {mostrarFormulario && (
+        <form onSubmit={publicar} className="panel space-y-6 mb-10" noValidate>
+          <h2>Escribir una pregunta</h2>
+          <div className="space-y-2">
+            <Label htmlFor="titulo">¿Qué quiere preguntar o compartir?</Label>
+            <Input id="titulo" value={titulo} onChange={(e) => setTitulo(e.target.value)} placeholder="Por ejemplo: ¿Cómo guardo un documento?" />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="texto">Cuéntenos un poco más</Label>
+            <Textarea id="texto" rows={5} value={texto} onChange={(e) => setTexto(e.target.value)} className="text-[1.05rem] border-2 border-input rounded-lg p-4" />
+          </div>
+          {error && <p role="alert" className="rounded-lg border-2 border-destructive bg-red-50 text-destructive font-bold px-4 py-3">{error}</p>}
+          <div className="flex flex-wrap gap-3">
+            <Button type="submit" size="lg">Publicar</Button>
+            <Button type="button" variant="outline" size="lg" onClick={() => { setMostrarFormulario(false); setError(""); }}>Cancelar</Button>
+          </div>
+        </form>
+      )}
+
+      <ul className="space-y-4">
+        {mensajes.map((m) => (
+          <li key={m.id} className="panel">
+            <h2 className="mb-1">{m.titulo}</h2>
+            <p className="text-base mb-3">{m.autor} · {m.fecha}</p>
+            <p className="mb-4">{m.texto}</p>
+            <p className="font-bold">{m.respuestas === 0 ? "Todavía nadie responde" : m.respuestas === 1 ? "1 respuesta" : `${m.respuestas} respuestas`}</p>
+          </li>
+        ))}
+      </ul>
     </Layout>
   );
 }

@@ -1,117 +1,61 @@
-
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Button } from "@/components/ui/button";
 import { GraduationCap } from "lucide-react";
-import { useToast } from "@/components/ui/use-toast";
 
 export default function Register() {
-  const [name, setName] = useState("");
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [school, setSchool] = useState("");
-  const [loading, setLoading] = useState(false);
+  const [nombre, setNombre] = useState("");
+  const [correo, setCorreo] = useState("");
+  const [clave, setClave] = useState("");
+  const [error, setError] = useState("");
   const navigate = useNavigate();
-  const { toast } = useToast();
 
-  const handleRegister = (e: React.FormEvent) => {
+  const crear = (e: React.FormEvent) => {
     e.preventDefault();
-    setLoading(true);
-
-    // Mock registration functionality
-    setTimeout(() => {
-      setLoading(false);
-      toast({
-        title: "Registro exitoso",
-        description: "Tu cuenta ha sido creada. ¡Bienvenido a Integra!",
-      });
-      navigate("/dashboard");
-    }, 1000);
+    if (nombre.trim().length < 3) return setError("Escriba su nombre completo.");
+    if (!correo.includes("@")) return setError("El correo debe tener una @. Por ejemplo: maria@correo.com");
+    if (clave.length < 4) return setError("La contraseña debe tener al menos 4 caracteres.");
+    setError("");
+    navigate("/inicio");
   };
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-b from-background to-secondary/30 p-4 py-10">
+    <div className="min-h-screen flex flex-col items-center justify-center p-6">
       <div className="w-full max-w-md">
-        <div className="text-center mb-8">
-          <div className="flex justify-center mb-4">
-            <div className="bg-primary rounded-full p-3 shadow-lg">
-              <GraduationCap className="h-10 w-10 text-white" />
-            </div>
-          </div>
-          <h1 className="text-3xl font-bold">Crear Cuenta</h1>
-          <p className="text-muted-foreground mt-2">Regístrate en Integra</p>
-        </div>
+        <Link to="/" className="flex items-center gap-3 mb-8 no-underline text-foreground">
+          <GraduationCap className="h-9 w-9 text-primary" aria-hidden="true" />
+          <span className="text-[1.4rem] font-bold">INTEGRA</span>
+        </Link>
 
-        <div className="bg-card shadow-sm border rounded-xl p-6 animate-fade-in">
-          <form onSubmit={handleRegister} className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="name">Nombre Completo</Label>
-              <Input
-                id="name"
-                type="text"
-                placeholder="Ingresa tu nombre"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                required
-                className="text-lg py-6"
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="email">Correo Electrónico</Label>
-              <Input
-                id="email"
-                type="email"
-                placeholder="ejemplo@correo.com"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
-                className="text-lg py-6"
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="school">Institución Educativa</Label>
-              <Input
-                id="school"
-                type="text"
-                placeholder="Nombre de tu escuela"
-                value={school}
-                onChange={(e) => setSchool(e.target.value)}
-                required
-                className="text-lg py-6"
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="password">Contraseña</Label>
-              <Input
-                id="password"
-                type="password"
-                placeholder="••••••••"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-                className="text-lg py-6"
-              />
-            </div>
-            <Button
-              type="submit"
-              className="w-full text-lg py-6"
-              disabled={loading}
-            >
-              {loading ? "Registrando..." : "Registrarme"}
-            </Button>
-          </form>
+        <h1 className="mb-2">Crear mi cuenta</h1>
+        <p className="mb-6">Solo necesita tres datos. La sede ya está registrada: Agua bonita, San José del Guaviare.</p>
 
-          <div className="mt-6 text-center">
-            <p>
-              ¿Ya tienes una cuenta?{" "}
-              <Link to="/login" className="text-primary font-semibold hover:underline">
-                Iniciar sesión
-              </Link>
-            </p>
+        <form onSubmit={crear} className="panel space-y-6" noValidate>
+          <div className="space-y-2">
+            <Label htmlFor="nombre">Nombre completo</Label>
+            <Input id="nombre" autoComplete="name" value={nombre} onChange={(e) => setNombre(e.target.value)} />
           </div>
-        </div>
+          <div className="space-y-2">
+            <Label htmlFor="correo">Correo</Label>
+            <Input id="correo" type="email" autoComplete="email" placeholder="maria@correo.com" value={correo} onChange={(e) => setCorreo(e.target.value)} />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="clave">Contraseña (mínimo 4 caracteres)</Label>
+            <Input id="clave" type="password" autoComplete="new-password" value={clave} onChange={(e) => setClave(e.target.value)} />
+          </div>
+
+          {error && (
+            <p role="alert" className="rounded-lg border-2 border-destructive bg-red-50 text-destructive font-bold px-4 py-3">{error}</p>
+          )}
+
+          <Button type="submit" className="w-full" size="lg">Crear mi cuenta</Button>
+        </form>
+
+        <p className="mt-6">
+          ¿Ya tiene cuenta? <Link to="/entrar">Entrar</Link>
+        </p>
       </div>
     </div>
   );
