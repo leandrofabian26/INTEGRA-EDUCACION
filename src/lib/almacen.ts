@@ -17,6 +17,10 @@ export type MensajeForo = {
 export type Evento = { id?: number; correo: string; tipo: string; detalle: string; fecha: string; enLinea: boolean };
 export type RespuestaForo = { id: string; mensajeId: string; correo: string; autor: string; texto: string; creadoEn: string; estado: "pendiente" | "enviado"; enviadoEn?: string };
 export type Cuestionario = { id: string; correo: string; momento: "inicio" | "cierre"; respuestas: Record<string, string | number>; creadoEn: string };
+export type MensajeChat = {
+  id: string; conversacionId: string; de: string; para: string; texto: string;
+  creadoEn: string; estado: "pendiente" | "enviado"; enviadoEn?: string; leido: boolean;
+};
 
 interface EsquemaIntegra extends DBSchema {
   usuarios: { key: string; value: Usuario };
@@ -25,13 +29,14 @@ interface EsquemaIntegra extends DBSchema {
   eventos: { key: number; value: Evento; indexes: { porCorreo: string } };
   respuestas: { key: string; value: RespuestaForo; indexes: { porMensaje: string; porEstado: string } };
   cuestionarios: { key: string; value: Cuestionario; indexes: { porCorreo: string } };
+  chats: { key: string; value: MensajeChat; indexes: { porConversacion: string; porPara: string } };
 }
 
 let bd: Promise<IDBPDatabase<EsquemaIntegra>> | null = null;
 
 function abrir() {
   if (!bd) {
-    bd = openDB<EsquemaIntegra>("integra", 2, {
+    bd = openDB<EsquemaIntegra>("integra", 3, {
       upgrade(db, versionAnterior) {
         if (versionAnterior < 1) {
           db.createObjectStore("usuarios", { keyPath: "correo" });
@@ -48,6 +53,11 @@ function abrir() {
           re.createIndex("porEstado", "estado");
           const cu = db.createObjectStore("cuestionarios", { keyPath: "id" });
           cu.createIndex("porCorreo", "correo");
+        }
+        if (versionAnterior < 3) {
+          const ch = db.createObjectStore("chats", { keyPath: "id" });
+          ch.createIndex("porConversacion", "conversacionId");
+          ch.createIndex("porPara", "para");
         }
       },
     });
@@ -94,6 +104,11 @@ export async function obtenerUsuario(correo: string) {
   return (await abrir()).get("usuarios", correo);
 }
 
+export async function listarColegas(correoActual: string): Promise<Usuario[]> {
+  const todos = await (await abrir()).getAll("usuarios");
+  return todos.filter((u) => u.correo !== correoActual).sort((a, b) => a.nombre.localeCompare(b.nombre));
+}
+
 /* ---------- avance ---------- */
 export async function leerAvance(correo: string): Promise<Avance[]> {
   return (await abrir()).getAllFromIndex("avance", "porCorreo", correo);
@@ -136,7 +151,11 @@ export async function sincronizarPendientes(): Promise<number> {
   for (const r of respuestas) {
     await db.put("respuestas", { ...r, estado: "enviado", enviadoEn: ahora() });
   }
-  return pendientes.length + respuestas.length;
+  const chatsPendientes = (await db.getAll("chats")).filter((m) => m.estado === "pendiente");
+  for (const m of chatsPendientes) {
+    await db.put("chats", { ...m, estado: "enviado", enviadoEn: ahora() });
+  }
+  return pendientes.length + respuestas.length + chatsPendientes.length;
 }
 
 /* ---------- respuestas del foro ---------- */
@@ -179,6 +198,63 @@ export function cuestionariosACSV(lista: Cuestionario[], claves: string[]): stri
   const esc = (v: unknown) => `"${String(v ?? "").replace(/"/g, '""')}"`;
   const filas = lista.map((c) => [c.creadoEn, c.correo, c.momento, ...claves.map((k) => c.respuestas[k])].map(esc).join(";"));
   return ["fecha;usuario;momento;" + claves.join(";"), ...filas].join("\n");
+}
+
+/*
+  ---------- chat privado (uno a uno, entre colegas de la misma sede) ----------
+  Mismo almacén local que el resto: los dos participantes usan este mismo
+  equipo, así que no hace falta servidor para que se "envíen" el mensaje.
+  Solo se puede leer la conversación pidiendo los dos correos exactos, así
+  que nunca aparece mezclada con el foro público.
+*/
+function idConversacion(a: string, b: string): string {
+  return [a, b].map((c) => c.trim().toLowerCase()).sort().join("|");
+}
+
+export async function enviarMensajeChat(de: string, para: string, texto: string, enLinea: boolean): Promise<MensajeChat> {
+  const m: MensajeChat = {
+    id: `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+    conversacionId: idConversacion(de, para),
+    de, para, texto: texto.trim(), creadoEn: ahora(),
+    estado: enLinea ? "enviado" : "pendiente",
+    enviadoEn: enLinea ? ahora() : undefined,
+    leido: false,
+  };
+  await (await abrir()).put("chats", m);
+  return m;
+}
+
+export async function leerConversacion(a: string, b: string): Promise<MensajeChat[]> {
+  const mensajes = await (await abrir()).getAllFromIndex("chats", "porConversacion", idConversacion(a, b));
+  return mensajes.sort((x, y) => x.creadoEn.localeCompare(y.creadoEn));
+}
+
+export async function marcarConversacionLeida(propio: string, otro: string) {
+  const db = await abrir();
+  const sinLeer = (await db.getAllFromIndex("chats", "porConversacion", idConversacion(propio, otro)))
+    .filter((m) => m.para === propio && !m.leido);
+  for (const m of sinLeer) await db.put("chats", { ...m, leido: true });
+}
+
+export async function listarConversaciones(correo: string): Promise<{ colega: Usuario; ultimo: MensajeChat | null; noLeidos: number }[]> {
+  const colegas = await listarColegas(correo);
+  const filas = await Promise.all(colegas.map(async (colega) => {
+    const mensajes = await leerConversacion(correo, colega.correo);
+    const ultimo = mensajes.length ? mensajes[mensajes.length - 1] : null;
+    const noLeidos = mensajes.filter((m) => m.para === correo && !m.leido).length;
+    return { colega, ultimo, noLeidos };
+  }));
+  return filas.sort((a, b) => {
+    if (!a.ultimo && !b.ultimo) return a.colega.nombre.localeCompare(b.colega.nombre);
+    if (!a.ultimo) return 1;
+    if (!b.ultimo) return -1;
+    return b.ultimo.creadoEn.localeCompare(a.ultimo.creadoEn);
+  });
+}
+
+export async function contarChatsNoLeidos(correo: string): Promise<number> {
+  const recibidos = await (await abrir()).getAllFromIndex("chats", "porPara", correo);
+  return recibidos.filter((m) => !m.leido).length;
 }
 
 /* ---------- eventos (registro de uso) ---------- */

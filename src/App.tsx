@@ -8,6 +8,8 @@ import Dashboard from "./pages/Dashboard";
 import Modulos from "./pages/Modulos";
 import ModuloDetalle from "./pages/ModuloDetalle";
 import Forum from "./pages/Forum";
+import Chats from "./pages/Chats";
+import ChatConversacion from "./pages/ChatConversacion";
 import Avance from "./pages/Avance";
 import Ayuda from "./pages/Ayuda";
 import Profile from "./pages/Profile";
@@ -30,6 +32,8 @@ const App = () => (
         <Route path="/modulos" element={<RutaProtegida><Modulos /></RutaProtegida>} />
         <Route path="/modulos/:id" element={<RutaProtegida><ModuloDetalle /></RutaProtegida>} />
         <Route path="/foro" element={<RutaProtegida><Forum /></RutaProtegida>} />
+        <Route path="/chats" element={<RutaProtegida><Chats /></RutaProtegida>} />
+        <Route path="/chats/:correo" element={<RutaProtegida><ChatConversacion /></RutaProtegida>} />
         <Route path="/avance" element={<RutaProtegida><Avance /></RutaProtegida>} />
         <Route path="/ayuda" element={<RutaProtegida><Ayuda /></RutaProtegida>} />
         <Route path="/cuenta" element={<RutaProtegida><Profile /></RutaProtegida>} />

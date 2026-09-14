@@ -1,26 +1,38 @@
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { cerrarSesion, registrarEvento, sesionActual } from "@/lib/almacen";
-import { Home, BookOpen, MessageSquare, BarChart3, HelpCircle, LogOut, GraduationCap, User } from "lucide-react";
+import { Home, BookOpen, MessageSquare, MessageCircle, BarChart3, HelpCircle, LogOut, GraduationCap, User } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { useChatsNoLeidos } from "@/hooks/useChat";
 
 /*
-  Menú principal: cinco entradas, siempre con icono y texto.
+  Menú principal: seis entradas, siempre con icono y texto.
   En escritorio va fijo a la izquierda; en móvil, abajo.
 */
 export const entradasMenu = [
   { titulo: "Inicio", ruta: "/inicio", icono: Home },
   { titulo: "Mis módulos", ruta: "/modulos", icono: BookOpen },
   { titulo: "Foro", ruta: "/foro", icono: MessageSquare },
+  { titulo: "Chat", ruta: "/chats", icono: MessageCircle },
   { titulo: "Mi avance", ruta: "/avance", icono: BarChart3 },
   { titulo: "Ayuda", ruta: "/ayuda", icono: HelpCircle },
 ];
+
+function Aviso({ n }: { n: number }) {
+  if (n <= 0) return null;
+  return (
+    <span className="inline-flex items-center justify-center min-w-[1.5rem] h-6 rounded-full bg-destructive text-destructive-foreground text-[0.8rem] font-bold px-1.5" aria-label={`${n} mensajes sin leer`}>
+      {n}
+    </span>
+  );
+}
 
 export default function Navegacion() {
   const { pathname } = useLocation();
   const esMovil = useIsMobile();
   const navigate = useNavigate();
+  const correo = sesionActual();
+  const noLeidos = useChatsNoLeidos(correo ?? undefined, pathname);
   const salir = async () => {
-    const correo = sesionActual();
     if (correo) await registrarEvento(correo, "salir");
     cerrarSesion();
     navigate("/");
@@ -37,11 +49,16 @@ export default function Navegacion() {
                 <Link
                   to={ruta}
                   aria-current={activa ? "page" : undefined}
-                  className={`flex flex-col items-center justify-center gap-1 min-h-[4.25rem] px-1 no-underline text-[0.85rem] font-bold border-t-4 ${
+                  className={`relative flex flex-col items-center justify-center gap-1 min-h-[4.25rem] px-1 no-underline text-[0.85rem] font-bold border-t-4 ${
                     activa ? "border-primary text-primary bg-secondary" : "border-transparent text-foreground"
                   }`}
                 >
-                  <Icono className="h-7 w-7" aria-hidden="true" />
+                  <span className="relative">
+                    <Icono className="h-7 w-7" aria-hidden="true" />
+                    {ruta === "/chats" && noLeidos > 0 && (
+                      <span className="absolute -top-1 -right-2"><Aviso n={noLeidos} /></span>
+                    )}
+                  </span>
                   {titulo}
                 </Link>
               </li>
@@ -72,7 +89,8 @@ export default function Navegacion() {
                 }`}
               >
                 <Icono className="h-7 w-7 shrink-0" aria-hidden="true" />
-                {titulo}
+                <span className="flex-1">{titulo}</span>
+                {ruta === "/chats" && <Aviso n={noLeidos} />}
               </Link>
             </li>
           );

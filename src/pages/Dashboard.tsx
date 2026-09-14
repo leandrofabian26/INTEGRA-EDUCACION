@@ -5,14 +5,16 @@ import { pasosDe } from "@/content/pasos";
 import BarraAvance from "@/components/BarraAvance";
 import { useSesion } from "@/hooks/useSesion";
 import { useAvance } from "@/hooks/useAvance";
-import { ArrowRight, MessageSquare, HelpCircle, ClipboardList } from "lucide-react";
+import { ArrowRight, MessageSquare, MessageCircle, HelpCircle, ClipboardList } from "lucide-react";
 import { useEffect, useState } from "react";
 import { cuestionariosDe } from "@/lib/almacen";
+import { useChatsNoLeidos } from "@/hooks/useChat";
 
 /* Inicio: una sola cosa importante — continuar donde quedó. */
 export default function Dashboard() {
   const { usuario } = useSesion();
   const { listo, estadoDe, completados, enCurso, siguiente } = useAvance(usuario?.correo);
+  const noLeidos = useChatsNoLeidos(usuario?.correo);
   const primerNombre = usuario?.nombre.split(" ")[0] ?? "docente";
   const [hechoInicio, setHechoInicio] = useState<boolean | null>(null);
   const [hechoCierre, setHechoCierre] = useState<boolean | null>(null);
@@ -87,7 +89,16 @@ export default function Dashboard() {
             <span className="block">Pregunte o comparta con los colegas de la sede.</span>
           </span>
         </Link>
-        <Link to="/ayuda" className="panel no-underline text-foreground hover:bg-secondary flex items-start gap-4">
+        <Link to="/chats" className="panel no-underline text-foreground hover:bg-secondary flex items-start gap-4">
+          <MessageCircle className="h-8 w-8 text-primary shrink-0" aria-hidden="true" />
+          <span>
+            <span className="block font-bold text-[1.15rem]">
+              Chat {noLeidos > 0 && <span className="inline-flex items-center justify-center min-w-[1.5rem] h-6 rounded-full bg-destructive text-destructive-foreground text-[0.8rem] px-1.5 align-middle">{noLeidos}</span>}
+            </span>
+            <span className="block">Escríbale en privado a un colega o al tutor, para lo que no quiera preguntar en el foro.</span>
+          </span>
+        </Link>
+        <Link to="/ayuda" className="panel no-underline text-foreground hover:bg-secondary flex items-start gap-4 sm:col-span-2">
           <HelpCircle className="h-8 w-8 text-primary shrink-0" aria-hidden="true" />
           <span>
             <span className="block font-bold text-[1.15rem]">Ayuda</span>
