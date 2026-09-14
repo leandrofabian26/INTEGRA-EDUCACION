@@ -5,12 +5,13 @@ Plataforma de formación en tecnología para docentes de 55 a 65 años de la ver
 ## Principios de diseño
 
 - **Pensada para docentes de 55 a 65 años.** Letra grande (base 20 px en escritorio, 18 px en móvil), fuente Atkinson Hyperlegible, alto contraste (WCAG AA en todo el texto), botones de mínimo 52 px de alto con borde visible, icono + texto siempre, y control **A− / A+** para agrandar toda la interfaz.
-- **Una sola cosa importante por pantalla.** Inicio abre con "Continuar donde quedé". El menú tiene cinco entradas: Inicio, Mis módulos, Foro, Mi avance, Ayuda.
+- **Una sola cosa importante por pantalla.** Inicio abre con "Continuar donde quedé". El menú tiene seis entradas: Inicio, Mis módulos, Foro, Chat, Mi avance, Ayuda.
 - **Módulos por pasos (cápsulas de 5 a 10 minutos).** Cada paso sigue la misma secuencia: qué va a lograr → cómo se hace → practíquelo ahora → «Lo logré, siguiente paso» o «Necesito ayuda» (que abre las trabas más comunes y el enlace al foro). Se puede volver a cualquier paso y repasar un módulo completo. Cada «Necesito ayuda» queda registrado.
 - **Foro con respuestas.** Preguntas y respuestas entre colegas, con nombre real; todo funciona sin señal y se marca como enviado cuando vuelve.
+- **Chat privado, estilo Messenger.** Para lo que un docente no se sienta cómodo preguntando en público: conversación uno a uno con un colega o el tutor, nunca visible en el foro. Avisa mensajes sin leer con una insignia en el menú, y también funciona sin señal.
 - **Cuestionario de autopercepción integrado** (Anexo A de la tesis): 24 preguntas, una por pantalla, con botones grandes. Se pide al empezar (inicio) y al completar los seis módulos (cierre); se exporta a CSV desde Mi cuenta.
 - **Lenguaje claro.** "Entrar" en vez de "Iniciar sesión"; errores en frases completas que dicen qué hacer.
-- **Funciona sin internet.** Es una aplicación web instalable (PWA): tras la primera carga, todo queda guardado en el equipo y abre sin señal. Las cuentas, el avance, los mensajes del foro y el registro de uso se guardan en el mismo computador (IndexedDB). Un indicador en la cabecera muestra siempre si hay conexión; al volver la señal, los mensajes pendientes del foro se marcan como enviados.
+- **Funciona sin internet.** Es una aplicación web instalable (PWA): tras la primera carga, todo queda guardado en el equipo y abre sin señal. Las cuentas, el avance, los mensajes del foro, el chat privado y el registro de uso se guardan en el mismo computador (IndexedDB). Un indicador en la cabecera muestra siempre si hay conexión; al volver la señal, los mensajes pendientes del foro y del chat se marcan como enviados.
 - **Nada que distraiga.** Sin modo oscuro, sin animaciones decorativas, sin imágenes de relleno.
 
 ## Paleta
@@ -33,16 +34,18 @@ src/
   content/modulos.ts        Módulos iniciales (se reemplazan con los del ciclo 1)
   content/pasos.ts          Pasos de cada módulo: texto, práctica, «si se traba»
   content/cuestionario.ts   Preguntas del cuestionario de autopercepción
-  lib/almacen.ts            Almacén local (IndexedDB): usuarios, avance, foro, eventos
+  lib/almacen.ts            Almacén local (IndexedDB): usuarios, avance, foro, chat, eventos
   lib/fontSize.ts           Escala de letra guardada en el equipo
   hooks/useSesion.ts        Quién está usando el equipo
   hooks/useAvance.ts        Avance real por módulo (leer / completar paso / reiniciar)
   hooks/useConexion.ts      Estado de la conexión en tiempo real
+  hooks/useChat.ts          Conversaciones, una conversación puntual y avisos sin leer
   components/layout/        Navegación, cabecera, control de letra, indicador de
                             conexión, ruta protegida
   components/               Estado de módulo, barra de avance, ilustraciones SVG
   pages/                    Welcome, Login, Register, Dashboard (Inicio), Modulos,
                             ModuloDetalle (visor de pasos), Forum (con respuestas),
+                            Chats (lista de conversaciones), ChatConversacion,
                             Avance, Ayuda, Cuestionario, Profile (Mi cuenta), NotFound
 public/iconos/              Iconos de la aplicación instalable
 vite.config.ts              Configuración de la PWA (manifest + service worker)
@@ -57,9 +60,10 @@ Todo se guarda en el navegador del equipo, en la base `integra` (IndexedDB):
 | `usuarios` | nombre, correo, sede y contraseña cifrada (SHA-256) |
 | `avance` | pasos completados por módulo y fecha |
 | `foro` | mensajes con estado `pendiente` (sin señal) o `enviado` |
-| `eventos` | registro de uso: entrar, salir, abrir módulo, paso completado, módulo completado, necesito ayuda, foro (publicar y responder), cuestionario, cambios de conexión, sincronización, exportaciones |
+| `eventos` | registro de uso: entrar, salir, abrir módulo, paso completado, módulo completado, necesito ayuda, foro (publicar y responder), chat (enviar), cuestionario, cambios de conexión, sincronización, exportaciones |
 | `respuestas` | respuestas a mensajes del foro, con estado `pendiente` o `enviado` |
 | `cuestionarios` | respuestas del cuestionario de autopercepción (inicio y cierre) |
+| `chats` | mensajes privados uno a uno entre dos correos, con estado `pendiente` o `enviado` y si ya se leyó |
 
 En **Mi cuenta** hay dos botones de descarga en CSV (separador `;`, compatible con Excel): el registro de uso y los cuestionarios. Alimentan las fuentes "registros de la plataforma" y "cuestionario de autopercepción" del Capítulo III de la tesis. No incluyen contraseñas.
 
@@ -91,5 +95,6 @@ npm run lint
 
 - **Entrega 1:** base visual y estructura para docentes mayores.
 - **Entrega 2:** modo sin conexión (PWA), cuentas y avance guardados en el equipo, foro con cola de envío, indicador de conexión, registro de uso exportable.
-- **Entrega 3 (esta versión):** módulos por pasos con ilustraciones y práctica guiada, foro con respuestas, cuestionario de autopercepción integrado y exportable.
-- **Siguiente:** contenido definitivo de los módulos a partir del ciclo 1 con los docentes; servidor de sincronización para compartir el foro entre equipos.
+- **Entrega 3:** módulos por pasos con ilustraciones y práctica guiada, foro con respuestas, cuestionario de autopercepción integrado y exportable.
+- **Chat privado (esta versión):** conversación uno a uno con un colega o el tutor, separada del foro público, con aviso de mensajes sin leer.
+- **Siguiente:** contenido definitivo de los módulos a partir del ciclo 1 con los docentes; servidor de sincronización para compartir el foro y el chat entre equipos.
