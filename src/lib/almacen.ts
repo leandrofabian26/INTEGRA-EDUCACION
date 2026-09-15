@@ -112,11 +112,36 @@ export async function crearUsuario(nombre: string, correo: string, clave: string
 
 export async function validarUsuario(correo: string, clave: string): Promise<Usuario | null> {
   const db = await abrir();
-  const u = await db.get("usuarios", correo.trim().toLowerCase());
-  if (!u) return null;
-  if (u.claveHash !== (await hashClave(clave))) return null;
-  if (!u.sincronizado) void vincularConNube(u.correo, clave);
-  return u;
+  const c = correo.trim().toLowerCase();
+  const u = await db.get("usuarios", c);
+  if (u) {
+    if (u.claveHash !== (await hashClave(clave))) return null;
+    if (!u.sincronizado) void vincularConNube(u.correo, clave);
+    return u;
+  }
+  // No existe en este equipo: puede ser un docente entrando desde un
+  // computador distinto al que usó para registrarse. Si hay señal, se
+  // intenta con la cuenta de la nube y, si coincide, se copia localmente
+  // para que desde ahora también funcione sin conexión en este equipo.
+  return await entrarDesdeNube(c, clave);
+}
+
+async function entrarDesdeNube(correo: string, clave: string): Promise<Usuario | null> {
+  if (!supabaseConfigurado || !supabase || !navigator.onLine) return null;
+  try {
+    const { data, error } = await supabase.auth.signInWithPassword({ email: correo, password: clave });
+    if (error || !data.user) return null;
+    const { data: perfil } = await supabase.from("perfiles").select("*").eq("id", data.user.id).maybeSingle();
+    if (!perfil) return null;
+    const nuevo: Usuario = {
+      correo, nombre: perfil.nombre, claveHash: await hashClave(clave),
+      sede: perfil.sede, creadoEn: perfil.creado_en, rol: perfil.rol, sincronizado: true,
+    };
+    await (await abrir()).put("usuarios", nuevo);
+    return nuevo;
+  } catch {
+    return null;
+  }
 }
 
 /*
