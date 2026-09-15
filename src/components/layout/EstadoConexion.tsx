@@ -23,7 +23,7 @@ export default function EstadoConexion() {
       sincronizarPendientes().then((n) => {
         if (n > 0) {
           registrarEvento(correo, "sincronizacion", `${n} mensajes enviados`);
-          setAviso(`Volvió la señal: se enviaron ${n === 1 ? "1 mensaje pendiente" : `${n} mensajes pendientes`} del foro.`);
+          setAviso(`Volvió la señal: se sincronizaron ${n === 1 ? "1 mensaje pendiente" : `${n} mensajes pendientes`}.`);
           setTimeout(() => setAviso(""), 8000);
         }
       });

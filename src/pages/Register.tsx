@@ -18,7 +18,7 @@ export default function Register() {
     e.preventDefault();
     if (nombre.trim().length < 3) return setError("Escriba su nombre completo.");
     if (!correo.includes("@")) return setError("El correo debe tener una @. Por ejemplo: maria@correo.com");
-    if (clave.length < 4) return setError("La contraseña debe tener al menos 4 caracteres.");
+    if (clave.length < 6) return setError("La contraseña debe tener al menos 6 caracteres.");
     setError("");
     setEnviando(true);
     const r = await crearUsuario(nombre, correo, clave);
@@ -51,7 +51,7 @@ export default function Register() {
             <Input id="correo" type="email" autoComplete="email" placeholder="maria@correo.com" value={correo} onChange={(e) => setCorreo(e.target.value)} />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="clave">Contraseña (mínimo 4 caracteres)</Label>
+            <Label htmlFor="clave">Contraseña (mínimo 6 caracteres)</Label>
             <Input id="clave" type="password" autoComplete="new-password" value={clave} onChange={(e) => setClave(e.target.value)} />
           </div>
 

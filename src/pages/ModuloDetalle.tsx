@@ -6,11 +6,13 @@ import { pasosDe } from "@/content/pasos";
 import BarraAvance from "@/components/BarraAvance";
 import Ilustracion from "@/components/Ilustracion";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { useSesion } from "@/hooks/useSesion";
 import { useAvance } from "@/hooks/useAvance";
-import { registrarEvento } from "@/lib/almacen";
-import { ArrowLeft, ArrowRight, Check, RotateCcw, HelpCircle, MessageSquare } from "lucide-react";
+import { useConexion } from "@/hooks/useConexion";
+import { registrarEvento, listarMateriales, subirMaterial, descargarMaterial, type Material } from "@/lib/almacen";
+import { ArrowLeft, ArrowRight, Check, RotateCcw, HelpCircle, MessageSquare, Upload, Download, FileText } from "lucide-react";
 
 /*
   Visor de pasos. Un paso por pantalla:
@@ -22,17 +24,27 @@ export default function ModuloDetalle() {
   const pasos = pasosDe(id ?? "");
   const { usuario } = useSesion();
   const { listo, estadoDe, completarPaso, reiniciarModulo } = useAvance(usuario?.correo);
+  const enLinea = useConexion();
 
   // Índice del paso que se está viendo (0-based). Empieza en el primer paso pendiente.
   const [visible, setVisible] = useState<number | null>(null);
   const [mostrarAyuda, setMostrarAyuda] = useState(false);
   const [mensaje, setMensaje] = useState("");
 
+  const [materiales, setMateriales] = useState<Material[]>([]);
+  const [archivo, setArchivo] = useState<File | null>(null);
+  const [subiendo, setSubiendo] = useState(false);
+  const [errorMaterial, setErrorMaterial] = useState("");
+
   const estado = modulo ? estadoDe(modulo) : { tipo: "pendiente" as const, hechos: 0 };
 
   useEffect(() => {
     if (usuario && modulo) registrarEvento(usuario.correo, "abrir_modulo", modulo.id);
   }, [usuario, modulo]);
+
+  useEffect(() => {
+    if (modulo) listarMateriales(modulo.id).then(setMateriales);
+  }, [modulo, enLinea]);
 
   useEffect(() => {
     if (listo && modulo && visible === null) setVisible(Math.min(estado.hechos, pasos.length - 1));
@@ -70,6 +82,29 @@ export default function ModuloDetalle() {
   };
 
   const irA = (n: number) => { setVisible(n); setMostrarAyuda(false); setMensaje(""); window.scrollTo({ top: 0 }); };
+
+  const subir = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!usuario || !archivo) return;
+    setSubiendo(true);
+    const r = await subirMaterial(modulo.id, archivo, usuario.correo);
+    setSubiendo(false);
+    if (r.ok === false) { setErrorMaterial(r.error); return; }
+    setArchivo(null);
+    setErrorMaterial("");
+    setMateriales(await listarMateriales(modulo.id));
+  };
+
+  const descargar = async (m: Material) => {
+    setErrorMaterial("");
+    const blob = await descargarMaterial(m.id);
+    if (!blob) { setErrorMaterial("No se pudo descargar. Intente cuando haya conexión."); return; }
+    setMateriales((actual) => actual.map((x) => (x.id === m.id ? { ...x, blob, disponibleOffline: true } : x)));
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url; a.download = m.nombre; a.click();
+    URL.revokeObjectURL(url);
+  };
 
   return (
     <Layout>
@@ -133,6 +168,41 @@ export default function ModuloDetalle() {
           <Link to="/foro" className="btn-secundario"><MessageSquare className="h-6 w-6" aria-hidden="true" /> Preguntar en el foro</Link>
         </section>
       )}
+
+      <section className="panel mb-6" aria-label="Material del módulo">
+        <h2 className="mb-4 flex items-center gap-2"><FileText className="h-6 w-6" aria-hidden="true" /> Material</h2>
+
+        {materiales.length === 0 ? (
+          <p className="mb-4">Todavía no hay archivos para este módulo.</p>
+        ) : (
+          <ul className="space-y-3 mb-4">
+            {materiales.map((m) => (
+              <li key={m.id} className="flex flex-wrap items-center justify-between gap-3 rounded-lg border-2 border-border p-4">
+                <div>
+                  <p className="font-bold">{m.nombre}</p>
+                  <p className="text-base">Subido por {m.subidoPor}</p>
+                </div>
+                <Button variant="outline" onClick={() => descargar(m)}>
+                  <Download aria-hidden="true" /> {m.blob ? "Abrir" : "Descargar"}
+                </Button>
+              </li>
+            ))}
+          </ul>
+        )}
+
+        {errorMaterial && <p role="alert" className="rounded-lg border-2 border-destructive bg-red-50 text-destructive font-bold px-4 py-3 mb-4">{errorMaterial}</p>}
+
+        {usuario?.rol === "facilitador" && (
+          <form onSubmit={subir} className="space-y-3 border-t-2 border-border pt-4">
+            <p className="font-bold">Subir un archivo para este módulo</p>
+            {!enLinea && <p className="text-integra-ambar font-bold">Necesita conexión a internet para subir un archivo.</p>}
+            <Input type="file" disabled={!enLinea || subiendo} onChange={(e) => setArchivo(e.target.files?.[0] ?? null)} />
+            <Button type="submit" disabled={!enLinea || !archivo || subiendo}>
+              <Upload aria-hidden="true" /> {subiendo ? "Subiendo…" : "Subir archivo"}
+            </Button>
+          </form>
+        )}
+      </section>
 
       {estado.tipo === "completado" && (
         <section className="panel border-integra-selva bg-integra-selvaClaro">

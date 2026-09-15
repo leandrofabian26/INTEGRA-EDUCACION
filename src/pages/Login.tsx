@@ -21,8 +21,8 @@ export default function Login() {
       setError("El correo debe tener una @. Por ejemplo: maria@correo.com");
       return;
     }
-    if (clave.length < 4) {
-      setError("La contraseña debe tener al menos 4 caracteres.");
+    if (clave.length < 6) {
+      setError("La contraseña debe tener al menos 6 caracteres.");
       return;
     }
     setError("");
